@@ -3,9 +3,11 @@
 A small, local-only Roblox launcher with multi-account swapping, one-click join, and optional FPS tools.
 Made by Diamond.
 
-**Your accounts never leave your PC.** There is no server, no analytics and no update check. See "Privacy" below.
+**GitHub:** https://github.com/D14M0ND-RBX/roblox-multi-instance  |  **Report a bug:** https://github.com/D14M0ND-RBX/roblox-multi-instance/issues
 
-**It is one file.** `Glint.bat` contains the launcher, the program and the icon. Nothing else is needed.
+**Your accounts never leave your PC.** There is no server and no analytics. The only extra thing it does is an optional update check against GitHub (you can turn it off). See "Privacy" below.
+
+**It is one file.** `Glint.bat` contains the launcher, the program and the icon. Nothing else is needed. You can also turn it into a real `Glint.exe` that pins to the taskbar - see "Make Glint.exe" below.
 
 ---
 
@@ -20,6 +22,8 @@ Made by Diamond.
 
 Next time you open it, picking an account and pressing **Launch** is all you need.
 
+Want it on your taskbar? Build `Glint.exe` once (see "Make Glint.exe" below), open it, then right-click its taskbar icon and choose **Pin to taskbar**.
+
 ## The launch screen
 
 | Control | What it does |
@@ -30,6 +34,8 @@ Next time you open it, picking an account and pressing **Launch** is all you nee
 | **Configure** | Accounts and all settings. |
 | **Game or private server link** | What to join. Shows a green tick when the link is understood. |
 | **Allow multiple Roblox instances** | Your choice, see below. |
+| **Report a bug** (bottom left) | Opens the bug reporter, see below. |
+| **GitHub page** (bottom right) | Opens the project page. |
 
 ## Opening several accounts fast (pick, launch, swap, launch)
 
@@ -74,6 +80,7 @@ Roblox normally lets only one window run at a time. **Allow multiple Roblox inst
 - **Auto-select the next account after Launch** - the swap behaviour described above. On by default.
 - **Close this app after launching** - off by default.
 - **Skip the launch screen next time** - the app launches straight into your game with the account(s) you used last. Hold **Shift** while opening to bring the screen back.
+- **Check for updates on launch** - on by default. Asks GitHub once per launch whether a newer Glint exists and **always asks you before installing**. Untick it to never check.
 - **Seconds between launches** - the gap between two clients starting. Lower is faster, but a slow PC may need more.
 
 **Performance**
@@ -89,8 +96,36 @@ Roblox normally lets only one window run at a time. **Allow multiple Roblox inst
 
 - Accounts are stored in `%APPDATA%\DiamondLauncher\accounts.dat`, encrypted with Windows DPAPI. Only the same Windows user on the same PC can open it - copying the file elsewhere is useless.
 - You type your password only on Roblox's own login page, never into this app.
-- The only network traffic is to Roblox (sign-in and joining), plus these optional one-time downloads that always ask first: `handle64.exe` (Microsoft) and `PresentMon.exe` (Intel, from GitHub).
+- The only network traffic is to Roblox (sign-in and joining), the optional update check (a read-only request to `api.github.com` for the latest release - nothing about you is sent; switch it off in Settings), plus these optional one-time downloads that always ask first: `handle64.exe` (Microsoft) and `PresentMon.exe` (Intel, from GitHub).
 - Source is a single readable file: open `Glint.bat` in Notepad - the code is below the launcher part. The embedded icon data is kept at the very bottom.
+
+## Auto-update (setup for the publisher)
+
+Glint can check your GitHub for a newer version each time it opens, and offer to install it.
+
+**Already set up:** `UPDATE_REPO` in `Glint.bat` points to `D14M0ND-RBX/roblox-multi-instance`. The repository must stay **public** (the updater can't read private ones).
+
+**Releasing a new version**
+1. Raise the version in `Glint.bat`: `APP_NAME, APP_VERSION = "Glint", "1.2"`.
+2. On GitHub: **Releases -> Draft a new release**. Make the tag `v1.2` (it must be higher than the old one).
+3. Attach `Glint.bat`. If you also publish the exe, run `Build-Glint-Exe.bat` and attach `Glint.exe` too. (The attached file names must start with `Glint`.)
+4. Write a short description - it is shown to users in the update prompt. Publish.
+
+**What users see:** the next time they open Glint it says "Glint v1.2 is available - update now?". Yes downloads the file, replaces the old one and restarts. No does nothing (it asks again next launch).
+
+**Safety:** it only downloads from github.com, refuses a file that isn't a valid Glint, and keeps the old exe as `Glint.exe.old` until the next start. For extra safety, attach a file named `Glint.bat.sha256` (or `Glint.exe.sha256`) containing the file's SHA-256 hash and the updater will verify it. To make the hash, run `certutil -hashfile Glint.bat SHA256` and paste the long hex line into that file.
+
+## Reporting a bug
+
+Press **Report a bug** (bottom left of the launch screen, or in Settings under *Data*).
+
+1. Write what went wrong at the top (the "What went wrong" part).
+2. Press **Copy & open GitHub**. This copies the report and opens a new issue on https://github.com/D14M0ND-RBX/roblox-multi-instance/issues/new
+3. Paste it into the issue (Ctrl+V) and submit. You need a free GitHub account.
+
+By default the report contains **no personal or technical details** - only what you type plus the Glint version. If you want to help the developer fix it faster, tick *Also include technical details* to add your Windows version, settings and recent log. Even then, login cookies, private-server codes and your Windows username are removed, and account names become `account#1`, `account#2`...
+
+Nothing is sent by Glint itself - you decide what gets posted. The window also has links to the GitHub page and the issues list.
 
 ## Upgrading from Diamond Launcher
 
@@ -100,6 +135,12 @@ Glint is the new name of Diamond Launcher. Your saved accounts and settings carr
 
 **Windows says "Unknown publisher" / SmartScreen warning.**
 That text comes from a paid code-signing certificate, which this free tool doesn't have, so Windows can't show a name there. Click *More info -> Run anyway* (only for files you got from someone you trust). Properly showing "Diamond" would need an `.exe` signed with a real certificate.
+
+**Antivirus flags Glint.exe, or it is blocked.**
+Unsigned programs built with PyInstaller are often flagged by mistake. If you built it yourself from the readable source in this file, add an exception for `Glint.exe`. Only run exes you built or got from someone you trust.
+
+**No update prompt appears.**
+Check the repo is public, the release tag is higher than the current version, and *Check for updates on launch* is ticked. It also stays silent if you have no internet or GitHub is down.
 
 **The sign-in window doesn't open.** Use **Add by cookie** instead, or install Python 3.12 and Microsoft Edge WebView2.
 
@@ -115,21 +156,40 @@ That text comes from a paid code-signing certificate, which this free tool doesn
 
 If the app ever crashes, details are saved in `%APPDATA%\DiamondLauncher\crash.log`.
 
-## Optional (advanced): make an .exe with the diamond icon
+Everything shown in the log box is also saved to `%APPDATA%\DiamondLauncher\glint.log`. When that file reaches 1 MB it is cleared automatically and starts fresh, so it never grows big. Every new log starts with a header line showing the Glint version and your Windows username, for example `=== Glint v1.1 | user: YourName ===`. It stays on your PC and is never uploaded.
 
-1. Run `Glint.bat --export-icon` from a command prompt in the folder with the file. Nothing visible happens, but it writes `diamond.ico` next to the file (the icon is stored inside the .bat, so you never need to keep a separate icon file).
-2. Copy `Glint.bat` to `Glint.py`.
-3. Open it in Notepad and delete everything from the top down to (and including) the line that is just `"""` right above the `# ====` banner. What remains is pure Python.
-4. Run:
+## Make Glint.exe (pin it to the taskbar)
+
+A real `.exe` can be pinned to the taskbar and Start menu, and people you share it with don't need Python.
+
+1. Put `Build-Glint-Exe.bat` in the **same folder** as `Glint.bat`.
+2. Double-click `Build-Glint-Exe.bat`. It installs everything it needs by itself: Python 3.12 (if missing), PyInstaller, pywebview and Microsoft Edge WebView2 (if missing). This takes a few minutes the first time.
+3. When it says "Done", `Glint.exe` is in the same folder (with the diamond icon built in).
+4. Open `Glint.exe`, right-click its icon on the taskbar and choose **Pin to taskbar**. You can move `Glint.exe` anywhere first (for example a Programs folder) and pin it from there.
+
+Notes:
+- The exe is a copy made at build time. If you edit `Glint.bat`, run `Build-Glint-Exe.bat` again.
+- Your saved accounts and settings are shared between `Glint.bat` and `Glint.exe` (same data folder).
+- The exe starts a little slower than the .bat because it unpacks itself on every launch.
+- Because it is unsigned, Windows SmartScreen and some antivirus programs may warn about it. See Troubleshooting.
+- `handle64.exe` and `PresentMon.exe` are still downloaded on demand (and only after asking) - they are not inside the exe.
+
+<details>
+<summary>Doing it by hand instead</summary>
+
+1. Run `Glint.bat --export-icon` from a command prompt in the folder with the file. It writes `diamond.ico` next to it.
+2. Copy `Glint.bat` to `Glint.py`, open it in Notepad and delete everything from the top down to (and including) the line that is just `"""` right above the `# ====` banner.
+3. Run:
 ```
 py -m pip install pyinstaller pywebview
-pyinstaller --onefile --noconsole --icon diamond.ico --name "Glint" Glint.py
+pyinstaller --onefile --noconsole --icon diamond.ico --name "Glint" --collect-all webview Glint.py
 ```
-An unsigned .exe will still show "Unknown publisher" in Windows.
+The exe appears in the `dist` folder.
+</details>
 
 ## Removing it
 
-Untick *FPS boost* and *FPS unlocker* (this restores your settings), press *Wipe all data*, then delete the folder `%APPDATA%\DiamondLauncher` and the `.bat`.
+Untick *FPS boost* and *FPS unlocker* (this restores your settings), press *Wipe all data*, then delete the folder `%APPDATA%\DiamondLauncher`, the `.bat` and `Glint.exe` (unpin it from the taskbar first).
 
 ---
 
