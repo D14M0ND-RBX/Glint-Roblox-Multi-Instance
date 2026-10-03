@@ -61,6 +61,36 @@ Roblox normally lets only one window run at a time. **Allow multiple Roblox inst
 - If it is off and you press **Launch all** (or pick several accounts), the app asks whether to turn it on. Saying no launches just the first account.
 - If you used an earlier version, your previous choice is kept.
 
+## Open Roblox links with Glint (like Bloxstrap)
+
+On first run Glint asks whether to do this (say Yes). You can also switch it any time in Settings. When on, the **Play button on roblox.com** opens Glint instead of Roblox directly.
+
+1. Settings -> tick **Open Roblox links with Glint (Play button)** and confirm.
+2. Press Play on any Roblox game page. Glint pops up asking **which account** to launch (pick one or several), then starts Roblox with it.
+3. Tick *Don't ask again* in that window to always use the picked account, or untick **Ask which account when a link is opened** in Settings to change it later. With only one saved account it launches straight away.
+
+Good to know:
+- **Open normally** in the picker hands the link to Roblox untouched (it then uses whatever account the website is logged in with). Links Glint doesn't handle (for example *join a friend*) are passed to Roblox automatically.
+- If Glint is already open, the link goes to that window. Several clicks queue up with the usual gap between launches.
+- It works best with the built `Glint.exe` (the path is stable). With `Glint.bat` it works too, but **don't move or delete the file** while this is on.
+- Your browser may ask once whether it may open Glint - allow it.
+- With **Use Glint's own Roblox** on, Glint launches its own copy. With it off, Glint keeps a copy of Roblox's own link handler (in `%APPDATA%\DiamondLauncher\handlers.json`) and hands launches to it, so the normal Roblox still updates itself. If Bloxstrap is installed, its handler is kept and used the same way (not tested).
+- If a Roblox update takes the links back, Glint puts itself back the next time it opens.
+
+**Turn it off:** untick the box - Roblox gets its links back exactly as they were. If Glint is broken or you deleted it while this was on, run `Glint.bat --restore-links` (or reinstall Roblox) and the Play button works again.
+
+## Glint's own Roblox (like Bloxstrap)
+
+Bloxstrap doesn't just catch the Play button - it keeps **its own copy of Roblox** and launches that. Glint can do the same.
+
+- Turn it on in Settings: **Use Glint's own Roblox (like Bloxstrap)**. On first run Glint asks once and sets up both this and the Play button together.
+- Glint downloads Roblox straight from Roblox's own servers (a few hundred MB, one time) into `%LOCALAPPDATA%\Glint\Versions`, checks every file, and starts games from that copy. **Your normal Roblox install is never touched.**
+- It checks for a newer Roblox each time you launch and updates its own copy automatically (old copies are deleted once no Roblox window is open). If Roblox can't be reached, it just uses the copy it already has.
+- Pressing Play on roblox.com -> Glint -> Glint's own Roblox. You don't need the official Roblox or Bloxstrap installed at all.
+- The FPS boost flags go into Glint's copy too. Multiple instances, the FPS unlocker and the FPS tracker work the same.
+- Untick it any time and Glint goes back to using the normal Roblox install.
+- It doesn't install WebView2 (Windows 10/11 already has it, and Glint's sign-in window needs it anyway).
+
 ## Links you can paste
 
 - A normal game link: `https://www.roblox.com/games/123456789/Game-Name`
@@ -80,6 +110,9 @@ Roblox normally lets only one window run at a time. **Allow multiple Roblox inst
 - **Auto-select the next account after Launch** - the swap behaviour described above. On by default.
 - **Close this app after launching** - off by default.
 - **Skip the launch screen next time** - the app launches straight into your game with the account(s) you used last. Hold **Shift** while opening to bring the screen back.
+- **Use Glint's own Roblox (like Bloxstrap)** - Glint downloads and keeps its own copy of Roblox and launches that. Asked once on first run. See "Glint's own Roblox" above.
+- **Open Roblox links with Glint (Play button)** - asked once on first run. See "Open Roblox links with Glint" below.
+- **Ask which account when a link is opened** - on by default.
 - **Check for updates on launch** - on by default. Asks GitHub once per launch whether a newer Glint exists and **always asks you before installing**. Untick it to never check.
 - **Seconds between launches** - the gap between two clients starting. Lower is faster, but a slow PC may need more.
 
@@ -96,7 +129,8 @@ Roblox normally lets only one window run at a time. **Allow multiple Roblox inst
 
 - Accounts are stored in `%APPDATA%\DiamondLauncher\accounts.dat`, encrypted with Windows DPAPI. Only the same Windows user on the same PC can open it - copying the file elsewhere is useless.
 - You type your password only on Roblox's own login page, never into this app.
-- The only network traffic is to Roblox (sign-in and joining), the optional update check (a read-only request to `api.github.com` for the latest release - nothing about you is sent; switch it off in Settings), plus these optional one-time downloads that always ask first: `handle64.exe` (Microsoft) and `PresentMon.exe` (Intel, from GitHub).
+- The only network traffic is to Roblox (sign-in and joining), the optional update check (a read-only request to `api.github.com` for the latest release - nothing about you is sent; switch it off in Settings), plus, if you turn on *Use Glint's own Roblox*, downloads of Roblox itself from Roblox's servers (`clientsettingscdn.roblox.com` for the version number, `setup.rbxcdn.com` for the files), plus these optional one-time downloads that always ask first: `handle64.exe` (Microsoft) and `PresentMon.exe` (Intel, from GitHub).
+- *Open Roblox links with Glint* (off by default) changes the `roblox-player` and `roblox` link handlers under `HKEY_CURRENT_USER` only - no administrator rights, nothing system-wide. Turning it off restores the originals.
 - Source is a single readable file: open `Glint.bat` in Notepad - the code is below the launcher part. The embedded icon data is kept at the very bottom.
 
 ## Auto-update (setup for the publisher)
@@ -106,8 +140,8 @@ Glint can check your GitHub for a newer version each time it opens, and offer to
 **Already set up:** `UPDATE_REPO` in `Glint.bat` points to `D14M0ND-RBX/roblox-multi-instance`. The repository must stay **public** (the updater can't read private ones).
 
 **Releasing a new version**
-1. Raise the version in `Glint.bat`: `APP_NAME, APP_VERSION = "Glint", "1.2"`.
-2. On GitHub: **Releases -> Draft a new release**. Make the tag `v1.2` (it must be higher than the old one).
+1. Raise the version in `Glint.bat`: `APP_NAME, APP_VERSION = "Glint", "1.5"`.
+2. On GitHub: **Releases -> Draft a new release**. Make the tag `v1.5` (it must be higher than the old one).
 3. Attach `Glint.bat`. If you also publish the exe, run `Build-Glint-Exe.bat` and attach `Glint.exe` too. (The attached file names must start with `Glint`.)
 4. Write a short description - it is shown to users in the update prompt. Publish.
 
@@ -142,7 +176,13 @@ Unsigned programs built with PyInstaller are often flagged by mistake. If you bu
 **No update prompt appears.**
 Check the repo is public, the release tag is higher than the current version, and *Check for updates on launch* is ticked. It also stays silent if you have no internet or GitHub is down.
 
+**Play on roblox.com does nothing / the wrong program opens (after using Open Roblox links).**
+Untick *Open Roblox links with Glint* in Settings. If you can't open Glint any more, run `Glint.bat --restore-links` from a command prompt, or reinstall Roblox from roblox.com.
+
 **The sign-in window doesn't open.** Use **Add by cookie** instead, or install Python 3.12 and Microsoft Edge WebView2.
+
+**Glint's own Roblox won't download or won't start.**
+Check the log box in Settings (or `%APPDATA%\DiamondLauncher\glint.log`). If your antivirus blocks `RobloxPlayerBeta.exe`, add `%LOCALAPPDATA%\Glint` as an exception (Bloxstrap needs the same). To fall back at any time, untick *Use Glint's own Roblox* - the normal Roblox install is used again. To force a fresh download, delete `%LOCALAPPDATA%\Glint\Versions` and launch again.
 
 **Private server doesn't join.** Roblox changes these internal links now and then. Try the share link or the plain game link, and report what the log box in Settings says.
 
@@ -189,7 +229,7 @@ The exe appears in the `dist` folder.
 
 ## Removing it
 
-Untick *FPS boost* and *FPS unlocker* (this restores your settings), press *Wipe all data*, then delete the folder `%APPDATA%\DiamondLauncher`, the `.bat` and `Glint.exe` (unpin it from the taskbar first).
+Untick *Open Roblox links with Glint*, *Use Glint's own Roblox*, *FPS boost* and *FPS unlocker* (this restores your settings), press *Wipe all data*, then delete the folders `%APPDATA%\DiamondLauncher` and `%LOCALAPPDATA%\Glint` (Glint's own Roblox), the `.bat` and `Glint.exe` (unpin it from the taskbar first).
 
 ---
 
