@@ -1,5 +1,7 @@
 # Glint
 
+> **Version 1.6** - New: the *FPS watcher* keeps your FPS boost settings in place (re-applies them if Roblox changes them back), the FPS boost now also sets max FPS to 1000 and applies an `IxpSettings.json` preset (originals are restored when you turn it off), and the FPS tracker's PresentMon download is verified and self-repairing.
+
 A small, local-only Roblox launcher with multi-account swapping, one-click join, and optional FPS tools.
 Made by Diamond.
 
@@ -32,7 +34,8 @@ Want it on your taskbar? Build `Glint.exe` once (see "Make Glint.exe" below), op
 | **Launch** | Joins the saved game/private server with the picked account(s). The button shows who it will launch. |
 | **Launch all** | Starts every saved account, one after another. |
 | **Configure** | Accounts and all settings. |
-| **Game or private server link** | What to join. Shows a green tick when the link is understood. |
+| **Find game** | Search Roblox by name and pick a game - no link needed. With the search box empty it lists games you launched recently. Double-click a game (or press **Use this game**) to fill it in. |
+| **Game box** | What to join. You can also paste a game link, private server link or place ID here. Shows a green tick (and the game's name) when it is understood. |
 | **Allow multiple Roblox instances** | Your choice, see below. |
 | **Report a bug** (bottom left) | Opens the bug reporter, see below. |
 | **GitHub page** (bottom right) | Opens the project page. |
@@ -91,7 +94,9 @@ Bloxstrap doesn't just catch the Play button - it keeps **its own copy of Roblox
 - Untick it any time and Glint goes back to using the normal Roblox install.
 - It doesn't install WebView2 (Windows 10/11 already has it, and Glint's sign-in window needs it anyway).
 
-## Links you can paste
+## Links you can paste (optional)
+
+You never *need* a link: press **Find game** to search by name. Pasting still works for private servers and specific servers:
 
 - A normal game link: `https://www.roblox.com/games/123456789/Game-Name`
 - Just the place ID: `123456789`
@@ -117,8 +122,15 @@ Bloxstrap doesn't just catch the Play button - it keeps **its own copy of Roblox
 - **Seconds between launches** - the gap between two clients starting. Lower is faster, but a slow PC may need more.
 
 **Performance**
-- **FPS boost (optimized graphics flags)** - writes Roblox's allowed graphics flags (no grass, lower detail distance, grey sky, lowest render quality). Only flags on Roblox's official allowlist are used. Re-applied on every launch because Roblox updates reset them. Untick to restore your own flags. Works with Bloxstrap installs too.
-- **FPS unlocker (uncap FPS)** - sets Roblox's own *Maximum Frame Rate* value (default 9999, you can type another number). It can only be changed while **no Roblox window is open**, so it applies on your next launch from here.
+- **FPS boost / FPS optimization (optimized graphics flags)** - Glint asks about this on first run (Yes/No). When it is ON, Glint does three things, all quietly in the background:
+  1. Writes Roblox's allowed graphics flags (no grass, lower detail distance, grey sky, lowest render quality) into `ClientSettings\ClientAppSettings.json`. Only flags on Roblox's official allowlist are used.
+  2. Replaces `ClientSettings\IxpSettings.json` with Glint's preset (in every Roblox install Glint finds, including Glint's own copy). Your original file is backed up first.
+  3. Sets Roblox's *Maximum Frame Rate* (`FramerateCap` in `GlobalBasicSettings_13.xml`, found in `%LOCALAPPDATA%\Roblox`, then `%APPDATA%\Roblox`) to **1000**. Roblox only allows this to change while no Roblox window is open, so if one is open it is applied the next time it is closed. (The *FPS unlocker* below, if you tick it, uses its own number instead.)
+  
+  **FPS watcher (new in v1.6):** while Glint is open and the FPS boost is ON, Glint checks these files every few seconds. If Roblox or an update changed any of them back, Glint puts its settings back and notes it in the log (at most once a minute). If the FPS boost is OFF, the watcher does nothing at all. With *Close this app after launching* on, Glint stays hidden in the background while the FPS boost is ON (and closes itself a while after Roblox is closed) so the watcher keeps working.
+  
+  **Untick to undo:** your original `ClientAppSettings.json` values, `IxpSettings.json` and frame-rate setting are all put back. Works with Bloxstrap installs too.
+- **FPS unlocker (uncap FPS)** - sets Roblox's own *Maximum Frame Rate* value (default 9999, you can type another number). If the FPS boost is on and this is off, the value is 1000. It can only be changed while **no Roblox window is open**, so it applies on your next launch from here.
 - **FPS tracker overlay** - a draggable box showing real FPS for each Roblox window. Uses Intel's free PresentMon (one-time download, asks first). Windows shows a permission prompt each time it starts. Needs borderless/windowed Roblox to be visible on top. While it is on and the app is set to close after launching (or skips the launch screen), it stays in the background so the overlay keeps updating, and closes itself once Roblox is closed.
 
 **Data**
@@ -129,7 +141,8 @@ Bloxstrap doesn't just catch the Play button - it keeps **its own copy of Roblox
 
 - Accounts are stored in `%APPDATA%\DiamondLauncher\accounts.dat`, encrypted with Windows DPAPI. Only the same Windows user on the same PC can open it - copying the file elsewhere is useless.
 - You type your password only on Roblox's own login page, never into this app.
-- The only network traffic is to Roblox (sign-in and joining), the optional update check (a read-only request to `api.github.com` for the latest release - nothing about you is sent; switch it off in Settings), plus, if you turn on *Use Glint's own Roblox*, downloads of Roblox itself from Roblox's servers (`clientsettingscdn.roblox.com` for the version number, `setup.rbxcdn.com` for the files), plus these optional one-time downloads that always ask first: `handle64.exe` (Microsoft) and `PresentMon.exe` (Intel, from GitHub).
+- The FPS boost only edits Roblox's own settings files on this PC (`ClientAppSettings.json`, `IxpSettings.json`, `GlobalBasicSettings_13.xml`). It backs up what it replaces and restores it when you turn the boost off. Nothing about it is sent anywhere.
+- The only network traffic is to Roblox (sign-in, joining and the game search - the words you search for go to Roblox's search, nothing else), the optional update check (a read-only request to `api.github.com` for the latest release - nothing about you is sent; switch it off in Settings), plus, if you turn on *Use Glint's own Roblox*, downloads of Roblox itself from Roblox's servers (`clientsettingscdn.roblox.com` for the version number, `setup.rbxcdn.com` for the files), plus these optional one-time downloads that always ask first: `handle64.exe` (Microsoft) and `PresentMon.exe` (Intel, from GitHub).
 - *Open Roblox links with Glint* (off by default) changes the `roblox-player` and `roblox` link handlers under `HKEY_CURRENT_USER` only - no administrator rights, nothing system-wide. Turning it off restores the originals.
 - Source is a single readable file: open `Glint.bat` in Notepad - the code is below the launcher part. The embedded icon data is kept at the very bottom.
 
@@ -140,8 +153,8 @@ Glint can check your GitHub for a newer version each time it opens, and offer to
 **Already set up:** `UPDATE_REPO` in `Glint.bat` points to `D14M0ND-RBX/roblox-multi-instance`. The repository must stay **public** (the updater can't read private ones).
 
 **Releasing a new version**
-1. Raise the version in `Glint.bat`: `APP_NAME, APP_VERSION = "Glint", "1.5"`.
-2. On GitHub: **Releases -> Draft a new release**. Make the tag `v1.5` (it must be higher than the old one).
+1. Raise the version in `Glint.bat`: `APP_NAME, APP_VERSION = "Glint", "1.7"`.
+2. On GitHub: **Releases -> Draft a new release**. Make the tag `v1.7` (it must be higher than the old one).
 3. Attach `Glint.bat`. If you also publish the exe, run `Build-Glint-Exe.bat` and attach `Glint.exe` too. (The attached file names must start with `Glint`.)
 4. Write a short description - it is shown to users in the update prompt. Publish.
 
@@ -189,6 +202,8 @@ Check the log box in Settings (or `%APPDATA%\DiamondLauncher\glint.log`). If you
 **FPS unlocker says close Roblox.** Close every Roblox window, then press Launch again.
 
 **Nothing changed after FPS boost.** Flags are read when Roblox starts - restart any open Roblox windows.
+
+**The FPS counter says "waiting for Roblox..." forever.** Accept the Windows administrator prompt when the tracker starts, and allow `PresentMon.exe` (in `%APPDATA%\DiamondLauncher`) in your antivirus. Glint re-downloads PresentMon by itself if the file is damaged. Roblox must be visible on screen (not minimized).
 
 **Roblox says it is already running / won't open a second window.** Make sure *Allow multiple Roblox instances* is ticked, and if Roblox was already open before this app, close it first. If it still fails, run Glint as administrator.
 
